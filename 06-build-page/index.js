@@ -3,9 +3,12 @@ const path = require('path');
 
 const stylesFolder = path.join(__dirname, 'styles');
 const outputFile = path.join(__dirname, 'project-dist', 'style.css');
+const newDir = path.join(__dirname, 'project-dist');
 
 const merge = async () => {
   try {
+    await fs.promises.mkdir(newDir, { recursive: true });
+
     if (fs.existsSync(outputFile)) {
       await fs.promises.unlink(outputFile);
     }
