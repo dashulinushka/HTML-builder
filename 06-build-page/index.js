@@ -4,6 +4,8 @@ const path = require('path');
 const stylesFolder = path.join(__dirname, 'styles');
 const outputFile = path.join(__dirname, 'project-dist', 'style.css');
 const newDir = path.join(__dirname, 'project-dist');
+const baseDir = path.join(__dirname, 'assets');
+const destDir = path.join(newDir, 'assets');
 
 const merge = async () => {
   try {
@@ -32,3 +34,34 @@ const merge = async () => {
 };
 
 merge();
+
+const copy = async (src, dest) => {
+  await fs.promises.mkdir(dest, { recursive: true });
+
+  const files = await fs.promises.readdir(src);
+
+  for (const file of files) {
+    const srcFile = path.join(src, file);
+    const destFile = path.join(dest, file);
+
+    const stat = await fs.promises.stat(srcFile);
+
+    if (stat.isDirectory()) {
+      await copy(srcFile, destFile);
+    } else {
+      await fs.promises.copyFile(srcFile, destFile);
+    }
+  }
+  console.log('Copy done');
+};
+
+const buildProject = async () => {
+  try {
+    await merge();
+    await copy(baseDir, destDir);
+  } catch (error) {
+    console.error('Error:', error);
+  }
+};
+
+buildProject();
