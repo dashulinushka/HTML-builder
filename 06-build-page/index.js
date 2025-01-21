@@ -6,6 +6,9 @@ const outputFile = path.join(__dirname, 'project-dist', 'style.css');
 const newDir = path.join(__dirname, 'project-dist');
 const baseDir = path.join(__dirname, 'assets');
 const destDir = path.join(newDir, 'assets');
+const temp = path.join(__dirname, 'template.html');
+const componentsDir = path.join(__dirname, 'components');
+const result = path.join(newDir, 'index.html');
 
 const merge = async () => {
   try {
@@ -27,7 +30,7 @@ const merge = async () => {
     }
 
     await fs.promises.writeFile(outputFile, styles.join('\n'), 'utf-8');
-    console.log('Merge successfully to style.css');
+    console.log('Merge to style.css');
   } catch (error) {
     console.error('Error:', error);
   }
@@ -55,10 +58,39 @@ const copy = async (src, dest) => {
   console.log('Copy done');
 };
 
+const html = async () => {
+  try {
+    const templateContent = await fs.promises.readFile(temp, 'utf-8');
+    const componentFiles = await fs.promises.readdir(componentsDir);
+
+    const components = {};
+    for (const file of componentFiles) {
+      const componentPath = path.join(componentsDir, file);
+      const componentContent = await fs.promises.readFile(
+        componentPath,
+        'utf-8',
+      );
+      const componentName = path.basename(file, path.extname(file));
+      components[`{{${componentName}}}`] = componentContent;
+    }
+
+    let resultHtml = templateContent;
+    for (const [name, content] of Object.entries(components)) {
+      resultHtml = resultHtml.replace(new RegExp(name, 'g'), content);
+    }
+
+    await fs.promises.writeFile(result, resultHtml, 'utf-8');
+    console.log('HTML created successfully');
+  } catch (error) {
+    console.error('Error:', error);
+  }
+};
+
 const buildProject = async () => {
   try {
     await merge();
     await copy(baseDir, destDir);
+    await html();
   } catch (error) {
     console.error('Error:', error);
   }
